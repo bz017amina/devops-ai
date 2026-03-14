@@ -31,10 +31,10 @@ L'infrastructure est déployée dans la région **us-east-1** (Virginie du Nord)
 ### 2. 🚀 Informations de Connexion
 L'accès aux instances s'effectue via SSH avec l'utilisateur par défaut et la clé privée générée.
 
-| Nom | Rôle | Adresse IP Publique |
+| Nom | Rôle | Adresse IP Publique | Utilisateur |
 | :--- | :--- | :--- | :--- |
-| **k3s-master** | Master Node | `54.xx.xx.xx` |
-| **k3s-worker** | Worker Node | `3.xx.xx.xx` | 
+| **k3s-master** | Master Node | `54.xx.xx.xx` | `[HIDDEN]` |
+| **k3s-worker** | Worker Node | `3.xx.xx.xx` | `[HIDDEN]` | 
 
 > 🔒 **Sécurité :** Les adresses IP réelles sont masquées dans cette documentation publique. La connexion nécessite le fichier `devops-key.pem` (non inclus dans le dépôt Git).
 
