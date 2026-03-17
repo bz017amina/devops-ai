@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credit-api-deployment
+  labels:
+    app: credit-risk
+spec:
+  [cite_start]replicas: 2 # Kubernetes lancera 2 copies de ton app pour plus de sécurité [cite: 18]
+  selector:
+    matchLabels:
+      app: credit-risk
+  template:
+    metadata:
+      labels:
+        app: credit-risk
+    spec:
+      containers:
+      - name: credit-api
+        # IMPORTANT : Hafsa utilisera ce nom d'image dans le pipeline [cite: 40]
+        image: TON_LOGIN_DOCKERHUB/credit-risk-api:latest 
+        ports:
+        - containerPort: 5000 # Le port que tu as EXPOSE dans ton Dockerfile
