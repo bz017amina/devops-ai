@@ -45,12 +45,12 @@ Le déploiement a été réalisé en suivant les étapes rigoureuses de Terrafor
 2.  `terraform plan` : **Simulation** pour visualiser les modifications avant l'exécution.
 3.  `terraform apply` : **Déploiement** réel des ressources sur le Cloud.
 
-Phase 2 — Ingénieure Système (Ansible & Kubernetes)
-🔹 Description
+## Phase 2 — Ingénieure Système (Ansible & Kubernetes)
+## Description
 
 Préparation et configuration des serveurs cloud pour déployer une application avec Kubernetes. Installation automatique de Docker et création d’un cluster léger K3s.
 
-🔹 Rôle
+## Rôle
 
 Configurer les serveurs cloud pour accueillir l’application.
 
@@ -58,7 +58,7 @@ Installer et orchestrer Kubernetes via Ansible.
 
 Assurer le bon fonctionnement du cluster pour le pipeline CI/CD.
 
-🔹 Réalisations
+## Réalisations
 
 Récupération des IPs des machines virtuelles créées sur AWS.
 
@@ -72,18 +72,17 @@ Vérification que le cluster est opérationnel avec kubectl get nodes (tous les 
 
 Transmission du feu vert à l’équipe pour démarrer le pipeline CI/CD.
 
-🔹 Fichiers du projet
+## Fichiers du projet
 
 ansible/inventory.ini → Liste des serveurs Master et Worker
 
 ansible/playbook_k3s.yml → Installation automatique de Docker et K3s
 
-🔹 Vérification du cluster
+## Vérification du cluster
 kubectl get nodes
-# NAME                             STATUS   ROLES           AGE   VERSION
-# ip-172-31-16-51.ec2.internal     Ready    control-plane   34h   v1.34.5+k3s1
-# ip-172-31-29-246.ec2.internal    Ready    <none>          8h    v1.34.5+k3s1
-
+ NAME                             STATUS   ROLES           AGE   VERSION
+ ip-172-31-16-51.ec2.internal     Ready    control-plane   34h   v1.34.5+k3s1
+ ip-172-31-29-246.ec2.internal    Ready    <none>          8h    v1.34.5+k3s1
 
 ## Phase 4. CI/CD Pipeline & Monitoring 
 
