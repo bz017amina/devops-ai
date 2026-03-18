@@ -5,8 +5,9 @@ metadata:
 spec:
   selector:
     app: credit-risk
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
   type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
+    nodePort: 32542
