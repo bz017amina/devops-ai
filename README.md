@@ -45,7 +45,28 @@ Le déploiement a été réalisé en suivant les étapes rigoureuses de Terrafor
 2.  `terraform plan` : **Simulation** pour visualiser les modifications avant l'exécution.
 3.  `terraform apply` : **Déploiement** réel des ressources sur le Cloud.
 
+##🔧 Phase 2 — Ingénieure Système (Ansible & Kubernetes)
+Rôle
+Préparer les serveurs cloud pour accueillir l'application en installant et configurant le cluster Kubernetes.
+Ce que j'ai fait
 
+Récupéré les IPs des machines virtuelles créées par Amina sur AWS
+Écrit les playbooks Ansible pour installer Docker automatiquement sur les serveurs
+Installé et configuré un cluster K3s (Kubernetes léger) sur les machines Master et Worker
+Résolu plusieurs problèmes techniques : conflits SELinux, changements d'IPs, manque de RAM (passage de t3.micro à t3.small)
+Vérifié que le cluster est fonctionnel avec kubectl get nodes → les 2 nœuds en statut Ready
+Donné le feu vert à Hafsa pour démarrer le pipeline CI/CD
+
+Fichiers
+
+ansible/inventory.ini → Liste des serveurs Master et Worker
+ansible/playbook_k3s.yml → Installation automatique de Docker et K3s
+
+Commande de vérification
+bashkubectl get nodes
+# NAME                             STATUS   ROLES           AGE   VERSION
+# ip-172-31-16-51.ec2.internal     Ready    control-plane   34h   v1.34.5+k3s1
+# ip-172-31-29-246.ec2.internal    Ready    <none>          8h    v1.34.5+k3s1
 
 ## Phase 4. CI/CD Pipeline & Monitoring 
 
