@@ -1,0 +1,34 @@
+---
+- hosts: worker
+  become: yes
+  vars:
+    k3s_master_ip: 100.31.159.219
+    k3s_token: K103c300063f9fa1cb2ab6a99b90481f50d5f7883a158300a8127a01104c6237e99::server:5d754f25ab6e4834db65a5b3e1ad4c68
+  tasks:
+    - name: Mettre à jour le système
+      command: yum update -y
+      changed_when: false
+
+    - name: Installer Docker via amazon-linux-extras
+      command: amazon-linux-extras install docker -y
+      args:
+        creates: /usr/bin/docker
+
+    - name: Démarrer et activer Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ajouter ec2-user au groupe docker
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Installer K3s worker
+      shell: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_SELINUX_RPM=true K3S_URL=https://{{ k3s_master_ip }}:6443 K3S_TOKEN={{ k3s_token }} sh -
+      args:
+        creates: /usr/local/bin/k3s
+      tags: k3s
