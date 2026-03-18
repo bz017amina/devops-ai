@@ -44,3 +44,137 @@ Le déploiement a été réalisé en suivant les étapes rigoureuses de Terrafor
 1.  `terraform init` : **Initialisation** du projet et téléchargement des providers AWS.
 2.  `terraform plan` : **Simulation** pour visualiser les modifications avant l'exécution.
 3.  `terraform apply` : **Déploiement** réel des ressources sur le Cloud.
+
+
+
+## Phase 4. CI/CD Pipeline & Monitoring 
+
+### 4.1 Vue d'ensemble
+Le pipeline CI/CD automatise le déploiement de l'application 
+depuis GitHub jusqu'au cluster Kubernetes. Dès qu'un développeur 
+pousse du code sur la branche `main`, le pipeline se déclenche 
+automatiquement et déploie la nouvelle version en moins de 2 minutes.
+
+---
+
+### 4.2 Pipeline GitHub Actions
+
+#### Structure du pipeline `.github/workflows/deploy.yml`
+Le pipeline est composé de 2 jobs :
+
+**Job 1 — Build (57s)**
+- Récupère le code source depuis GitHub
+- Se connecte à Docker Hub avec les credentials sécurisés
+- Construit l'image Docker depuis le dossier `app/`
+- Pousse l'image sur Docker Hub : `haafsa123/credit-risk-api:latest`
+
+**Job 2 — Deploy (11s)**
+- Se connecte au Master Node AWS via SSH
+- Copie les fichiers YAML Kubernetes sur le serveur
+- Applique les manifests Kubernetes
+- Redémarre le déploiement avec la nouvelle image
+
+#### Déclencheur
+Le pipeline se déclenche automatiquement à chaque `git push` 
+sur la branche `main`.
+
+---
+
+### 4.3 Secrets GitHub configurés
+
+| Secret | Description |
+|--------|-------------|
+| `SSH_PRIVATE_KEY` | Clé SSH pour accéder au Master Node AWS |
+| `SERVER_IP` | IP publique du Master Node (13.220.113.168) |
+| `DOCKERHUB_USERNAME` | Nom d'utilisateur Docker Hub |
+| `DOCKERHUB_TOKEN` | Token d'accès Docker Hub (Read/Write) |
+
+---
+
+### 4.4 Docker Hub
+- **Image :** `haafsa123/credit-risk-api:latest`
+- **Registry :** hub.docker.com
+- L'image est mise à jour automatiquement à chaque pipeline
+
+---
+
+### 4.5 Monitoring — Prometheus & Grafana
+
+#### Installation
+```bash
+# Ajouter le swap pour libérer de la RAM
+sudo dd if=/dev/zero of=/swapfile bs=128M count=8
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Installer Helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+# Installer Prometheus
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+helm repo add prometheus-community \
+  https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/prometheus \
+  --namespace monitoring \
+  --create-namespace \
+  --set alertmanager.enabled=false \
+  --set pushgateway.enabled=false \
+  --set server.resources.requests.memory=50Mi \
+  --set server.resources.limits.memory=256Mi \
+  --set server.persistentVolume.enabled=false
+
+# Installer Grafana
+helm repo add grafana https://grafana.github.io/helm-charts
+helm install grafana grafana/grafana \
+  --namespace monitoring \
+  --set resources.requests.memory=80Mi \
+  --set resources.limits.memory=150Mi \
+  --set persistence.enabled=false
+```
+
+#### Accès à Grafana
+```bash
+# Récupérer le mot de passe admin
+kubectl get secret --namespace monitoring grafana \
+  -o jsonpath="{.data.admin-password}" | base64 --decode
+
+# Exposer Grafana
+kubectl port-forward -n monitoring svc/grafana 3000:80 \
+  --address 0.0.0.0 &
+```
+- **URL :** `http://13.220.113.168:3000`
+- **Username :** `admin`
+
+#### Configuration Prometheus dans Grafana
+- Data Source URL : `http://prometheus-server.monitoring.svc.cluster.local:9090`
+- Dashboard importé : **ID 315** (Kubernetes cluster monitoring)
+
+#### Métriques surveillées
+- **RAM utilisée :** 65.7% (1.84 GiB / 2.81 GiB)
+- **Trafic réseau :** Network I/O pressure en temps réel
+- **Pods CPU usage :** Utilisation CPU par pod
+- **Node Exporter :** Métriques des 2 nœuds (Master + Worker)
+
+---
+
+### 4.6 Vérification du déploiement
+```bash
+# Vérifier les pods de l'application
+kubectl get pods
+# Résultat attendu :
+# credit-api-deployment-xxx   1/1   Running
+
+# Vérifier les pods de monitoring
+kubectl get pods -n monitoring
+# Résultat attendu :
+# grafana             1/1   Running
+# prometheus-server   2/2   Running
+
+# Tester l'application
+curl http://13.220.113.168:32542
+# Résultat attendu :
+# {"message":"API CreditSim Active","model_ready":false}
+```
+
