@@ -587,7 +587,7 @@ function AuthLayout({ children }) {
           <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900, color: "#f1f5f9", letterSpacing: "-0.02em" }}>
             Credit<span style={{ color: "#6366f1" }}>Sim</span>
           </h1>
-          <p style={{ margin: "6px 0 0", color: "#475569", fontSize: 13 }}>Plateforme d'analyse de risque crédit — tester automatisation</p>
+          <p style={{ margin: "6px 0 0", color: "#475569", fontSize: 13 }}>Plateforme d'analyse de risque crédit -jihad</p>
         </div>
         {children}
       </div>
