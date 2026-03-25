@@ -1,0 +1,87 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  # ══════════════════════════════
+  # JOB 1 : BUILD
+  # ══════════════════════════════
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code source
+        uses: actions/checkout@v4
+
+      - name: Authentification sur Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construction et publication de l'image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/credit-risk-api:latest
+
+  # ══════════════════════════════
+  # JOB 2 : TEST  ← NOUVEAU
+  # ══════════════════════════════
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code source
+        uses: actions/checkout@v4
+
+      - name: Installation des dependances
+        run: |
+          pip install fastapi uvicorn pytest httpx
+          pip install -r app/requirements.txt
+
+      - name: Test de sante de l'application
+        run: |
+          cd app
+          python -c "
+          from fastapi.testclient import TestClient
+          from main import app
+          client = TestClient(app)
+          response = client.get('/')
+          assert response.status_code == 200
+          print('Test reussi : API repond correctement')
+          "
+
+  # ══════════════════════════════
+  # JOB 3 : DEPLOY
+  # ══════════════════════════════
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du code source
+        uses: actions/checkout@v4
+
+      - name: Transfert des manifests via SCP
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: 'k8s/'
+          target: '/home/ec2-user/'
+
+      - name: Deploiement via kubectl sur K3s
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ec2-user
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo kubectl apply -f /home/ec2-user/k8s/deployment.yaml
+            sudo kubectl apply -f /home/ec2-user/k8s/service.yaml
+            sudo kubectl rollout restart deployment/credit-api-deployment
+            sudo kubectl get pods
